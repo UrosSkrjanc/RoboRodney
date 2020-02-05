@@ -9,3 +9,5 @@ V direktoriju Navodila so vsa navodila za sestavljanje, inštaliranje in uproabo
 V direktoriju Nacrti co datoteke STL za tiskanje delov robota.
 
 Direktorij roborodney pa vsebuje ROS paket za uproavljanje robota
+
+uros.skrjanc@gmail.com
