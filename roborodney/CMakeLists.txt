@@ -237,6 +237,10 @@ add_executable(servoDriver src/servoDriver.cpp)
 add_dependencies(servoDriver ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(servoDriver ${catkin_LIBRARIES} pigpio rt pthread)
 
+add_executable(servoNaravnost src/servoNaravnost.cpp)
+add_dependencies(servoNaravnost ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(servoNaravnost ${catkin_LIBRARIES} pigpio rt pthread)
+
 add_executable(scanOkolice src/scanOkolice.cpp)
 add_dependencies(scanOkolice ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(scanOkolice ${catkin_LIBRARIES})
