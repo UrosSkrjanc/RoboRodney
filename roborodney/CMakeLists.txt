@@ -54,11 +54,11 @@ find_package(OpenCV)
 ## Generate messages in the 'msg' folder
  add_message_files(
    FILES
-   pozicijaObraza.msg
-   pozicijaServoMotorja.msg
-   razdaljaSenzor.msg
-   tockeOkolje.msg
-   ukazVoznje.msg
+   facePosition.msg
+   servoPosition.msg
+   sensorDistance.msg
+   pointsSurroundScan.msg
+   drivingCommand.msg
  )
 
 ## Generate services in the 'srv' folder
@@ -217,13 +217,9 @@ include_directories(
 
 FIND_LIBRARY(WIRINGPI_LIBRARY wiringPi /usr/include)
 
-add_executable(voznja_tipkovnica src/voznja_tipkovnica.cpp)
-add_dependencies(voznja_tipkovnica ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(voznja_tipkovnica ${catkin_LIBRARIES})
-
-add_executable(voznja_tipk src/voznja_tipk.cpp)
-add_dependencies(voznja_tipk ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(voznja_tipk ${catkin_LIBRARIES})
+add_executable(driveKeyboard src/driveKeyboard.cpp)
+add_dependencies(driveKeyboard ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(driveKeyboard ${catkin_LIBRARIES})
 
 add_executable(laserPublisher src/VL53L0X.cpp src/laserPublisher.cpp)
 add_dependencies(laserPublisher  ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
@@ -237,30 +233,30 @@ add_executable(servoDriver src/servoDriver.cpp)
 add_dependencies(servoDriver ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(servoDriver ${catkin_LIBRARIES} pigpio rt pthread)
 
-add_executable(servoNaravnost src/servoNaravnost.cpp)
-add_dependencies(servoNaravnost ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(servoNaravnost ${catkin_LIBRARIES} pigpio rt pthread)
+add_executable(servtoToCentre src/servtoToCentre.cpp)
+add_dependencies(servtoToCentre ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(servtoToCentre ${catkin_LIBRARIES} pigpio rt pthread)
 
-add_executable(scanOkolice src/scanOkolice.cpp)
-add_dependencies(scanOkolice ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(scanOkolice ${catkin_LIBRARIES})
+add_executable(surroundingsScan src/surroundingsScan.cpp)
+add_dependencies(surroundingsScan ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(surroundingsScan ${catkin_LIBRARIES})
 
-add_executable(scanSlike src/scanSlike.cpp)
-add_dependencies(scanSlike ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(scanSlike zbar ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+add_executable(pictureScan src/pictureScan.cpp)
+add_dependencies(pictureScan ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(pictureScan zbar ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
-add_executable(senzorLevoDesno src/senzorLevoDesno.cpp)
-add_dependencies(senzorLevoDesno ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(senzorLevoDesno ${catkin_LIBRARIES})
+add_executable(trayLeftRight src/trayLeftRight.cpp)
+add_dependencies(trayLeftRight ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(trayLeftRight ${catkin_LIBRARIES})
 
 add_executable(bno055 src/bno055_i2c_activity.cpp src/bno055.cpp src/watchdog.cpp)
 target_link_libraries(bno055 ${catkin_LIBRARIES})
 
-add_executable(voznja_auto src/voznja_auto.cpp)
-add_dependencies(voznja_auto ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(voznja_auto ${catkin_LIBRARIES})
+add_executable(driveAuto src/driveAuto.cpp)
+add_dependencies(driveAuto ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(driveAuto ${catkin_LIBRARIES})
 
-add_executable(voznja_joy src/voznja_joy.cpp)
-add_dependencies(voznja_joy ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(voznja_joy ${catkin_LIBRARIES})
+add_executable(driveJoypad src/driveJoypad.cpp)
+add_dependencies(driveJoypad ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(driveJoypad ${catkin_LIBRARIES})
 
