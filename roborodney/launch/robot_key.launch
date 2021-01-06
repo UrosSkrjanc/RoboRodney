@@ -1,0 +1,7 @@
+<launch>
+	<node pkg="roborodney" name="driveKeyboard" type="driveKeyboard" output="screen"/>
+	<node pkg="roborodney" name="robotDriver" type="robotDriver" output="log"/>
+	<node pkg="roborodney" name="cameraThruWeb" type="cameraThruWeb.py" output="log"/>
+	<node pkg="roborodney" name="laserPublisher" type="laserPublisher" output="log"/>
+	<node pkg="roborodney" name="servoDriver" type="servoDriver" />
+</launch>
