@@ -1,99 +1,57 @@
-/* This example shows how to get single-shot range
- measurements from the VL53L0X. The sensor can optionally be
- configured with different ranging profiles, as described in
- the VL53L0X API user manual, to get better performance for
- a certain application. This code is based on the four
- "SingleRanging" examples in the VL53L0X API.
-
- The range readings are in units of mm. */
 #include <ros/ros.h>
 #include <ros/console.h>
 #include <std_msgs/String.h>
 #include <std_msgs/Float64.h>
-
 #include <stdio.h>
 #include <stddef.h>	//#define NULL ...
 #include <linux/i2c-dev.h>
 #include <vl53l0x_driver/VL53L0X.h>
-#include "roborodney/razdaljaSenzor.h"
+#include "roborodney/sensorDistance.h"
 
+VL53L0X laserSensor;
 
-VL53L0X sensor;
-
-
-// Uncomment this line to use long range mode. This
-// increases the sensitivity of the sensor and extends its
-// potential range, but increases the likelihood of getting
-// an inaccurate reading because of reflections from objects
-// other than the intended target. It works best in dark
-// conditions.
-
-//#define LONG_RANGE
-
-
-// Uncomment ONE of these two lines to get
-// - higher speed at the cost of lower accuracy OR
-// - higher accuracy at the cost of lower speed
-
-//#define HIGH_SPEED
-//#define HIGH_ACCURACY
-
-
-void setup()
-{
-  sensor.init();
-  sensor.setTimeout(500);
-  
-#if defined LONG_RANGE
-  // lower the return signal rate limit (default is 0.25 MCPS)
-  sensor.setSignalRateLimit(0.1);
-  // increase laser pulse periods (defaults are 14 and 10 PCLKs)
-  sensor.setVcselPulsePeriod(VL53L0X::VcselPeriodPreRange, 18);
-  sensor.setVcselPulsePeriod(VL53L0X::VcselPeriodFinalRange, 14);
-#endif
-
-#if defined HIGH_SPEED
-  // reduce timing budget to 20 ms (default is about 33 ms)
-  sensor.setMeasurementTimingBudget(20000);
-#elif defined HIGH_ACCURACY
-  // increase timing budget to 200 ms
-  sensor.setMeasurementTimingBudget(200000);
-#endif
-}
+//frequency of measured distances per second
+int hz=10;
 
 int main(int argc, char **argv)
 {
-	ros::init(argc, argv, "laser");
-	ros::NodeHandle n;
-	setup();
+	ros::init(argc, argv, "laserPublisher");
+	ros::NodeHandle nh;
+	
+	//initialization of laser sensor
+	laserSensor.init();
+	laserSensor.setTimeout(500);
 
-	int hz=10;
-
-    //razdaljo pošilja v milimetrih
-	ros::Publisher laser = n.advertise<roborodney::razdaljaSenzor>("razdalja_senzor", 10);
+	//publisher that sends distance in cm
+	ros::Publisher laser = nh.advertise<roborodney::sensorDistance>("laser_distance", 10);
 
 	ros::Rate loop_rate(hz);
 
-    float distance = sensor.readRangeSingleMillimeters();
+	//program reads distance from sensor in mm
+    float distance = laserSensor.readRangeSingleMillimeters();
 
+	// if distance is 65535, that means that sensor is not ready and program is terminated
     if(distance != 65535){
-      printf("Laser pripravljen\n");
+      printf("Laser is ready.\n");
     } else {
-      printf("Laser ni pripravljen. Konec.\n");
+      printf("Laser is not ready. I quit.\n");
       exit(0);
     }
 
-
+	
+	//in this loop message for topic is created
+	//it sends time of measurement and distance in cm 10 times in secons
+	//frekuenzy (times in second) is defined in variable hz
 	while (ros::ok())
 	{
-        roborodney::razdaljaSenzor sporocilo_laser;
+        roborodney::sensorDistance laser_message;
 
-		distance = sensor.readRangeSingleMillimeters();
+		distance = laserSensor.readRangeSingleMillimeters();
 		
-        sporocilo_laser.razdalja = distance/10;
-        sporocilo_laser.cas = ros::Time::now();
+        laser_message.distance = distance/10;
+        laser_message.time = ros::Time::now();
 
-        laser.publish(sporocilo_laser);
+        laser.publish(laser_message);
 
 		ros::spinOnce();
 

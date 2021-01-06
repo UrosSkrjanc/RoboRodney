@@ -5,125 +5,105 @@
 #include <termios.h>
 #include "std_msgs/String.h"
 #include <string>
-#include "roborodney/ukazVoznje.h"
-
-//pini na L298N konotrolerju 
-//levi in desni motor se gledata glede na levo in desno stran robota
-//kontroler je postavljen tako, da gleda hladilnik nazaj, konektorji so spredaj
-//sprednja stran robota je tam, kjer je kamera in raspberry pi na plosci
-//int in1 = 23;  //desni motor
-//int in2 = 24;  //desni motor
-//int in3 = 27;  //levi motor
-// int in4 = 22;  //levi motor 
-int in1 = 5;  //desni motor
-int in2 = 6;  //desni motor
-int in3 = 19;  //levi motor
-int in4 = 13;  //levi motor 
-int hitrostNaprejNazaj=100;
-int hitrostLevoDesno=100;
-int trajanjeNaprejNazaj=100; // v tisocinkah
-int trajanjeLevoDesno=100;  // v tisocinkah
-float razdaljaDoOvireSenzor1=0.0;
-float razdaljaDoOvireSenzor2=0.0;
+#include "roborodney/drivingCommand.h"
 
 
+// pins on L298N motor driver
+// with L298N motor driver can control two DC motors. Pins on 5 and 6 are connected to right motor, nad pins 19 and 13 are connected with left motor
+// When we send signal on pin 5 it means, that right motor is spinning forward, and when we send signal on pin 6 it means, thar right motor is spinnig backward
+// The same means for pins 19 and 13 for right motor 
 
+int in1 = 5;  //right motor forward
+int in2 = 6;  //right motor backward
+int in3 = 19;  //left motor forward
+int in4 = 13;  //left motor backward
 
-void naprej(int trajanje, int hitrost)
+// Next four functions are actually driving robot. They send direction and speed to left and right motor, then wait for a certain period of time, then stop motors.
+
+//moving forward 
+void forward(int duration, int speed)
 {
-  softPwmWrite (in1, hitrost);  
-  softPwmWrite (in3, hitrost);
-  delay(trajanje);
+  softPwmWrite (in1, speed);  
+  softPwmWrite (in3, speed);
+  delay(duration);
   softPwmWrite (in1, 0);  
   softPwmWrite (in3, 0);
 }
 
-void nazaj(int trajanje, int hitrost)
+//moving backward
+void backward(int duration, int speed)
 {
-  softPwmWrite (in2, hitrost);  
-  softPwmWrite (in4, hitrost);
-  delay(trajanje);
+  softPwmWrite (in2, speed);  
+  softPwmWrite (in4, speed);
+  delay(duration);
   softPwmWrite (in2, 0);  
   softPwmWrite (in4, 0);
 }
 
-void levo(int trajanje, int hitrost)
+//rotating left
+void left(int duration, int speed)
 {
-  softPwmWrite (in2, hitrost);  
-  softPwmWrite (in3, hitrost);
-  delay(trajanje);
+  softPwmWrite (in2, speed);  
+  softPwmWrite (in3, speed);
+  delay(duration);
   softPwmWrite (in2, 0);  
   softPwmWrite (in3, 0);
   ROS_INFO("SEL LEVO!!!");
 }
 
-void desno(int trajanje, int hitrost)
+//rotating right
+void right(int duration, int speed)
 {
-  softPwmWrite (in4, hitrost);  
-  softPwmWrite (in1, hitrost);
-  delay(trajanje);
+  softPwmWrite (in4, speed);  
+  softPwmWrite (in1, speed);
+  delay(duration);
   softPwmWrite (in4, 0);  
   softPwmWrite (in1, 0);
 }
 
-void krog(int trajanje, int hitrost)
+// This function gets command for direction, speed and duration for driving robot's motors via driving_command topic and then sends apropriate command to one of the four functions above
+void getCommand(const roborodney::drivingCommand& msg)
 {
-  for (int i=0;i<72;i++){
-  softPwmWrite (in4, hitrost);  
-  softPwmWrite (in1, hitrost);
-  delay(trajanje);
-  softPwmWrite (in4, 0);  
-  softPwmWrite (in1, 0);
-  delay(500);
-  }
-}
+  std::string direction = msg.direction.c_str(); //direction of robot
+  int speed = msg.speed;  //speed of motors, from 0 (min) to 100 (max) in PWM duty cycle
+  int duration = msg.duration; //signal duration in micro seconds
 
-
-void izlusciUkaz(const roborodney::ukazVoznje& msg)
-{
-  std::string smer = msg.smer.c_str();
-  int hitrost = msg.hitrost;
-  int trajanje = msg.trajanje;
-
-  if (smer.compare("levo")==0){ROS_INFO("LEVO!!!");levo(trajanje,hitrost);}
-  if (smer.compare("desno")==0){ROS_INFO("DESNO!!!");desno(trajanje,hitrost);}
-  if (smer.compare("naprej")==0){ROS_INFO("NAPREJ!!!");naprej(trajanje,hitrost);}
-  if (smer.compare("nazaj")==0){ROS_INFO("NAZAJ!!!");nazaj(trajanje,hitrost);}
+  if (direction.compare("left")==0){ROS_INFO("Going left.");left(duration,speed);}
+  if (direction.compare("right")==0){ROS_INFO("Going right.");right(duration,speed);}
+  if (direction.compare("forward")==0){ROS_INFO("Going forward.");forward(duration,speed);}
+  if (direction.compare("backward")==0){ROS_INFO("Going backward.");backward(duration,speed);}
 }
 
 int main(int argc, char **argv)
 {
-  ros::init(argc, argv, "robot_driver");
-  ros::NodeHandle nh;
+	ros::init(argc, argv, "robot_driver");
+	ros::NodeHandle nh;
 
-  ros::Subscriber ukaz_smeri = nh.subscribe("ukaz_smeri", 1, izlusciUkaz);
+	ros::Subscriber ukaz_smeri = nh.subscribe("driving_command", 1, getCommand);
 
+	setenv("WIRINGPI_GPIOMEM", "1", 1);
 
-  setenv("WIRINGPI_GPIOMEM", "1", 1);
+	//Initialisation of L298N motor driver
+	wiringPiSetupGpio();
+	pinMode(in4,OUTPUT);
+	pinMode(in3,OUTPUT);
+	pinMode(in2,OUTPUT);
+	pinMode(in1,OUTPUT);
+	softPwmCreate (in4, 0, 100);
+	softPwmCreate (in3, 0, 100);
+	softPwmCreate (in2, 0, 100);
+	softPwmCreate (in1, 0, 100);
 
-  wiringPiSetupGpio();
-  pinMode(in4,OUTPUT);
-  pinMode(in3,OUTPUT);
-  pinMode(in2,OUTPUT);
-  pinMode(in1,OUTPUT);
+	ros::Duration(1.0).sleep();
+	ros::spinOnce();
 
-  softPwmCreate (in4, 0, 100);
-  softPwmCreate (in3, 0, 100);
-  softPwmCreate (in2, 0, 100);
-  softPwmCreate (in1, 0, 100);
+	printf("Let's drive! \n");
+	
+	// Program runs until is interrupted by CTRL-C command
+	ros::spin();
 
-  ros::Duration(1.0).sleep();
-  ros::spinOnce();
-
-  printf("GREMO!!! \n");
-
-
-  int c=0;
-
-  ros::spin();
-
-  printf("CIAO!!! \n");
-  return 0;
+	printf("Ciao! \n");
+	return 0;
 }
 
 
